@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Attendance App</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>Student Attendance App</h1>
+    <label for="attendanceDate">Select Date:</label>
+    <input type="date" id="attendanceDate">
+    <button onclick="getStudentAttendance()">Get Students</button>
+
+    <div id="studentList"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+        const studentListDiv = document.getElementById("studentList");
+        const staticStudentData = [
+            { id: 1, name: "John Doe" },
+            { id: 2, name: "Jane Smith" },
+            { id: 3, name: "Bob Johnson" },
+            // Add more students here if needed
+        ];
+
+        // Initialize attendanceData from localStorage or an empty object
+        let attendanceData = JSON.parse(localStorage.getItem("attendanceData")) || {};
+
+        function getStudentAttendance() {
+            const selectedDate = document.getElementById("attendanceDate").value;
+            displayStudentAttendance(staticStudentData, selectedDate);
+        }
+
+        function displayStudentAttendance(students, selectedDate) {
+            const studentListDiv = document.getElementById("studentList");
+
+            // Create HTML for each student with "Present" and "Absent" buttons
+            const studentHTML = students.map(student => {
+                const isPresent = getAttendanceStatus(student.id, selectedDate) === 'present';
+                const isAbsent = getAttendanceStatus(student.id, selectedDate) === 'absent';
+                return `
+                    <div>
+                        <span>${student.name}</span>
+                        <button onclick="markPresent(${student.id}, '${selectedDate}')">${isPresent ? 'Present ✓' : 'Present'}</button>
+                        <button onclick="markAbsent(${student.id}, '${selectedDate}')">${isAbsent ? 'Absent ✗' : 'Absent'}</button>
+                    </div>
+                `;
+            }).join("");
+
+            // Display the students
+            studentListDiv.innerHTML = studentHTML;
+        }
+
+        function getAttendanceStatus(studentId, date) {
+            if (attendanceData[date] && attendanceData[date][studentId]) {
+                return attendanceData[date][studentId];
+            }
+            return null;
+        }
+
+        function markPresent(studentId, date) {
+            // Update the UI to mark the student as present
+            const studentButton = document.querySelector(`[onclick="markPresent(${studentId}, '${date}')"]`);
+            studentButton.textContent = 'Present ✓';
+
+            // Update attendanceData and save it in localStorage
+            updateAttendanceData(date, studentId, 'present');
+        }
+
+        function markAbsent(studentId, date) {
+            // Update the UI to mark the student as absent
+            const studentButton = document.querySelector(`[onclick="markAbsent(${studentId}, '${date}')"]`);
+            studentButton.textContent = 'Absent ✗';
+
+            // Update attendanceData and save it in localStorage
+            updateAttendanceData(date, studentId, 'absent');
+        }
+
+        function updateAttendanceData(date, studentId, status) {
+            // Update attendanceData
+            if (!attendanceData[date]) {
+                attendanceData[date] = {};
+            }
+            attendanceData[date][studentId] = status;
+
+            // Save attendanceData in localStorage
+            localStorage.setItem("attendanceData", JSON.stringify(attendanceData));
+        }
+
+        // Initialize the attendance data when the page loads
+        getStudentAttendance();
+    </script>
+</body>
+</html>
